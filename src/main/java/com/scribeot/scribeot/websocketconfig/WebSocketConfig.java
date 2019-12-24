@@ -1,4 +1,4 @@
-package com.scribeot.scribeot;
+package com.scribeot.scribeot.websocketconfig;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
@@ -11,12 +11,17 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
-        config.enableSimpleBroker("/scribeot");
+        config.enableSimpleBroker("/topic", "/queue");
         config.setApplicationDestinationPrefixes("/doc");
+        config.setUserDestinationPrefix("/user/");
     }
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/scribeot-websocket").setAllowedOrigins("*").withSockJS();
+        registry
+                .addEndpoint("/scribeot-websocket")
+                .setAllowedOrigins("*")
+                .setHandshakeHandler(new ClientIDCreationHandler())
+                .withSockJS();
     }
 }

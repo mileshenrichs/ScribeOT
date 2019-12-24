@@ -3,7 +3,7 @@ import { useParams } from 'react-router';
 import featherIcon from '../../assets/feather-icon.png';
 import loadingSpinner from '../../assets/loading-spinner.gif';
 import {Client, Frame, Message} from 'stompjs';
-import {ClientJoinResponse} from '../../util/SocketHelper';
+import {InitDocumentStateRequest, InitDocumentStateResponse} from '../../util/SocketHelper';
 
 const Document: React.FC = () => {
     // Get global handles for SockJS and Stomp libraries included in index.html
@@ -21,23 +21,25 @@ const Document: React.FC = () => {
         console.log(nickname);
         setLoading(true);
         connect().then(() => {
-            sendName();
+            testSendJoinRequest();
         });
     };
 
     const connect = () => {
         return new Promise((resolve, reject) => {
-            const socket = new SockJS('http://localhost:8080/scribeot-websocket');
+            const socket = new SockJS('http://localhost:8080/scribeot-websocket?documentId=' + docId);
             stompClient = Stomp.over(socket);
 
             stompClient.connect({}, (frame?: Frame) => {
                 console.log('Connected: ' + frame);
-                stompClient.subscribe('/scribeot/greetings', (message: Message) => {
-                    const entryResponse: ClientJoinResponse = JSON.parse(message.body);
-                    if(entryResponse.accepted) {
-                        setIsLoggedIn(true);
-                    }
+
+                stompClient.subscribe('/user/queue/doc-init', (message: Message) => {
+                    const docInitState: InitDocumentStateResponse = JSON.parse(message.body);
+                    console.log(docInitState);
+                    setLoading(false);
+                    setIsLoggedIn(true);
                 });
+
                 resolve();
             }, (error: Frame | string) => {
                 console.log('connection error!');
@@ -50,8 +52,9 @@ const Document: React.FC = () => {
         });
     };
 
-    const sendName = () => {
-        stompClient.send('/doc/enter-with-nickname', {}, JSON.stringify({nickname}));
+    const testSendJoinRequest = () => {
+        const initDocStateRequest: InitDocumentStateRequest = {clientNickname: nickname};
+        stompClient.send('/doc/' + docId + '/request-doc-init', {}, JSON.stringify(initDocStateRequest));
     };
 
     const onNicknameInputKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -72,7 +75,7 @@ const Document: React.FC = () => {
             <h3>Choose a nickname:</h3>
 
             <div className="nickname-field">
-                <input type="text" placeholder="i.e. Tony, Gwen, Yoda"
+                <input autoFocus type="text" placeholder="i.e. Tony, Gwen, Yoda"
                        value={nickname} onChange={e => setNickname(e.target.value)}
                        onKeyPress={onNicknameInputKeyPress} />
                 <img className="feather" src={featherIcon} alt="" />
