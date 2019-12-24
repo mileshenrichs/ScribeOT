@@ -1,3 +1,6 @@
+@import url('https://fonts.googleapis.com/css?family=Open+Sans&display=swap');
+@import url('https://fonts.googleapis.com/css?family=EB+Garamond&display=swap');
+
 * {
     margin: 0;
     padding: 0;
@@ -6,4 +9,122 @@
 
 body {
     background: #f8edd4;
+    width: 1090px;
+    margin: 20px auto 0 auto;
+    color: #21201c;
+}
+
+.Header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 40px;
+}
+
+.Header img {
+    width: 145px;
+    padding: 8px 8px 8px 0;
+}
+
+.Header nav ul {
+    list-style-type: none;
+    font-family: "Open Sans", sans-serif;
+}
+
+.Header nav ul li {
+    display: inline-block;
+    margin-left: 50px;
+}
+
+.Header nav ul li:first-child {
+    margin-left: 0;
+}
+
+.Header nav ul li a {
+    text-decoration: none;
+    color: #21201c;
+}
+
+.not-logged-in {
+    margin-top: 50px;
+}
+
+.not-logged-in h1 {
+    font-family: "EB Garamond", serif;
+    font-weight: normal;
+    font-size: 60px;
+    text-align: center;
+    margin-bottom: 60px;
+}
+
+.not-logged-in h3 {
+    font-family: "Open Sans", sans-serif;
+    font-weight: normal;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.nickname-field {
+    position: relative;
+    margin: 0 auto 40px auto;
+    width: 260px;
+}
+
+.nickname-field input {
+    width: 100%;
+    outline: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    border: 0;
+    border-bottom: 2px solid #d9c2ab;
+    background: transparent;
+    font-family: "Open Sans", sans-serif;
+    font-size: 16px;
+    padding: 10px 0 8px 44px;
+    margin: 0 auto;
+    display: block;
+    color: #7d5024;
+}
+
+.nickname-field input:focus {
+    border-bottom-color: #e6801c;
+}
+
+.nickname-field img.feather {
+    width: 28px;
+    position: absolute;
+    left: 0;
+    top: 8px;
+}
+
+button.join-document {
+    border: 0;
+    background: #e6801c;
+    color: #ffffff;
+    font-family: "Open Sans", sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 230px;
+    height: 56px;
+    border-radius: 4px;
+    font-size: 18px;
+    margin: 0 auto;
+    cursor: pointer;
+    transition: background-color .25s ease-in-out;
+}
+
+button.join-document:hover {
+    background: #f3881f;
+}
+
+button.join-document:disabled {
+    cursor: default;
+    background: #9e9e9e;
+}
+
+.loading-spinner {
+    width: 40px;
+    margin: 30px auto 0 auto;
+    display: block;
 }

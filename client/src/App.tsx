@@ -3,6 +3,8 @@ import './App.css';
 import Home from './components/home/Home';
 import {BrowserRouter, Route} from 'react-router-dom';
 import Document from './components/document/Document';
+import About from './components/about/About';
+import Header from "./components/header/Header";
 
 const App: React.FC = () => {
     return (
@@ -13,11 +15,13 @@ const App: React.FC = () => {
                 </Route>
 
                 <Route exact path="/document/:docId">
+                    <Header />
                     <Document />
                 </Route>
 
-                <Route exact path="/no-auth">
-                    <h2>no auth</h2>
+                <Route exact path="/about">
+                    <Header />
+                    <About />
                 </Route>
             </BrowserRouter>
         </div>
