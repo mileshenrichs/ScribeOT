@@ -1,60 +1,39 @@
 import React, {useState} from 'react';
-import { useParams } from 'react-router';
+import {useParams} from 'react-router';
 import featherIcon from '../../assets/feather-icon.png';
 import loadingSpinner from '../../assets/loading-spinner.gif';
-import {Client, Frame, Message} from 'stompjs';
-import {InitDocumentStateRequest, InitDocumentStateResponse} from '../../util/SocketHelper';
+import SocketHelper, {InitDocumentState} from '../../util/SocketHelper';
+
+const socketHelper: SocketHelper = new SocketHelper();
 
 const Document: React.FC = () => {
-    // Get global handles for SockJS and Stomp libraries included in index.html
-    const SockJS = (window as any).SockJS;
-    const Stomp = (window as any).Stomp;
-    let stompClient: Client;
-
-    let { docId } = useParams();
-
     const [nickname, setNickname] = useState('');
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [loading, setLoading] = useState(false);
 
+    const documentId = Number((useParams() as {docId: string}).docId);
+    if(socketHelper.documentId === -1) {
+        socketHelper.documentId = documentId;
+    }
+
     const joinDocument = () => {
-        console.log(nickname);
         setLoading(true);
-        connect().then(() => {
-            testSendJoinRequest();
+        socketHelper.connect().then(() => {
+            configureWebsocketCallbacks();
+            socketHelper.sendClientJoinRequest(nickname);
         });
     };
 
-    const connect = () => {
-        return new Promise((resolve, reject) => {
-            const socket = new SockJS('http://localhost:8080/scribeot-websocket?documentId=' + docId);
-            stompClient = Stomp.over(socket);
-
-            stompClient.connect({}, (frame?: Frame) => {
-                console.log('Connected: ' + frame);
-
-                stompClient.subscribe('/user/queue/doc-init', (message: Message) => {
-                    const docInitState: InitDocumentStateResponse = JSON.parse(message.body);
-                    console.log(docInitState);
-                    setLoading(false);
-                    setIsLoggedIn(true);
-                });
-
-                resolve();
-            }, (error: Frame | string) => {
-                console.log('connection error!');
-                console.log(error);
-                if(error instanceof Frame && error.headers) {
-                    console.log('Error message: ' + (error.headers as any).message);
-                }
-                reject();
-            });
+    /**
+     * This component needs to be able to react to messages received over WebSocket connection with the server.
+     * This method defines how Document should react to various server-side events.
+     */
+    const configureWebsocketCallbacks = () => {
+        socketHelper.onDocumentInfoInitialized((initState: InitDocumentState) => {
+            console.log(initState);
+            setLoading(false);
+            setIsLoggedIn(true);
         });
-    };
-
-    const testSendJoinRequest = () => {
-        const initDocStateRequest: InitDocumentStateRequest = {clientNickname: nickname};
-        stompClient.send('/doc/' + docId + '/request-doc-init', {}, JSON.stringify(initDocStateRequest));
     };
 
     const onNicknameInputKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -65,7 +44,7 @@ const Document: React.FC = () => {
 
     const loggedInView = (
         <div className="logged-in">
-            <span>document {docId}</span>
+            <span>document {documentId}</span>
         </div>
     );
 
