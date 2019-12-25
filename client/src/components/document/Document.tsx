@@ -4,6 +4,9 @@ import featherIcon from '../../assets/feather-icon.png';
 import loadingSpinner from '../../assets/loading-spinner.gif';
 import SocketHelper, {ClientDisconnect, InitDocumentState, NewClientJoined} from '../../util/SocketHelper';
 import User from '../../ot/User';
+import DocumentContent from '../document-content/DocumentContent';
+import UsersList from '../users-list/UsersList';
+import generateUserColor from '../../util/generateUserColor';
 
 const socketHelper: SocketHelper = new SocketHelper({disableDebug: true});
 
@@ -55,7 +58,8 @@ const Document: React.FC = () => {
                 setDocumentContents(initState.document);
                 setRevisionNo(initState.revisionNo);
                 setMyUserId(initState.myUserId);
-                setUsers(initState.users);
+                const usersWithColors = assignColorsToUsers(initState.users);
+                setUsers(usersWithColors);
             });
         });
     };
@@ -68,9 +72,13 @@ const Document: React.FC = () => {
         if(myUserId !== '') {
             socketHelper.onNewOtherClientJoined((newClientJoined: NewClientJoined) => {
                 if(myUserId && myUserId !== newClientJoined.clientId) {
-                    // Add new client to users state object
                     console.log(newClientJoined);
+
+                    // Assign a color to the new client
                     const { clientId, client } = newClientJoined;
+                    client.color = generateUserColor();
+
+                    // Add new client to users state object
                     setUsers({
                         ...users,
                         [clientId]: client
@@ -96,6 +104,14 @@ const Document: React.FC = () => {
         }
     }, [users]);
 
+    const assignColorsToUsers = (users: { [userId: string]: User }) => {
+        Object.keys(users).forEach(userId => {
+            users[userId].color = generateUserColor();
+        });
+
+        return users;
+    };
+
     const onNicknameInputKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if(e.key === 'Enter') {
             joinDocument();
@@ -104,7 +120,8 @@ const Document: React.FC = () => {
 
     const loggedInView = (
         <div className="logged-in">
-            <span>document {documentId}</span>
+            <DocumentContent />
+            <UsersList users={users} myUserId={myUserId} />
         </div>
     );
 

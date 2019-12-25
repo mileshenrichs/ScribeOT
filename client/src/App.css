@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css?family=Open+Sans&display=swap');
+@import url('https://fonts.googleapis.com/css?family=Open+Sans:400,600&display=swap');
 @import url('https://fonts.googleapis.com/css?family=EB+Garamond&display=swap');
 
 * {
@@ -18,7 +18,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 40px;
+    margin-bottom: 30px;
 }
 
 .Header img {
@@ -43,6 +43,11 @@ body {
 .Header nav ul li a {
     text-decoration: none;
     color: #21201c;
+}
+
+.logged-in {
+    display: flex;
+    height: 70vh;
 }
 
 .not-logged-in {
@@ -127,4 +132,76 @@ button.join-document:disabled {
     width: 40px;
     margin: 30px auto 0 auto;
     display: block;
+}
+
+.DocumentContent {
+    font-family: "EB Garamond", serif;
+    width: 70%;
+    margin-right: 40px;
+}
+
+.DocumentContent .heading {
+    margin-bottom: 30px;
+}
+
+.DocumentContent h1 {
+    font-weight: 400;
+    font-size: 36px;
+}
+
+.DocumentContent .last-edited {
+    font-size: 14px;
+    color: #6d6a63;
+}
+
+.UsersList {
+    font-family: "Open Sans", sans-serif;
+    border-left: 2px solid #dad1bb;
+    padding-left: 30px;
+    margin-top: 92px;
+}
+
+.UsersList .heading {
+    margin: 6px 0 30px 0;
+}
+
+.UsersList .who-else {
+    font-weight: 600;
+    padding-right: 10px;
+}
+
+.UsersList .users-count {
+    color: #6d6a63;
+}
+
+.UsersList .user {
+    display: flex;
+    align-items: center;
+    margin-bottom: 17px;
+}
+
+.user .user_color {
+    display: block;
+    width: 30px;
+    height: 30px;
+    border-radius: 50px;
+    margin-right: 16px;
+}
+
+.user .user_nickname.just-you {
+    color: #848077;
+}
+
+.TextEditor {
+    height: 100%;
+}
+
+.TextEditor textarea {
+    background: transparent;
+    border: 0;
+    width: 100%;
+    height: 100%;
+    font-family: inherit;
+    font-size: 18px;
+    resize: none;
 }
