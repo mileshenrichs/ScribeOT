@@ -27,18 +27,17 @@ public class ConnectedClientService {
         return documentClientsMap.get(documentId).get(clientId);
     }
 
-    public void addClient(int documentId, String clientId, String nickname) {
+    public void addClient(int documentId, User newClient) {
         // init document if it doesn't already exist
         if(!documentClientsMap.containsKey(documentId)) {
             documentClientsMap.put(documentId, new HashMap<>());
         }
 
         // save client to document map
-        User newClient = new User(clientId, nickname);
-        documentClientsMap.get(documentId).put(clientId, newClient);
+        documentClientsMap.get(documentId).put(newClient.getId(), newClient);
 
         // save document to client map (reverse index)
-        clientDocumentMap.put(clientId, documentId);
+        clientDocumentMap.put(newClient.getId(), documentId);
     }
 
     public int getDocumentIdForConnection(String clientId) {

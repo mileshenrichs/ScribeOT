@@ -1,7 +1,10 @@
 package com.scribeot.scribeot;
 
+import com.scribeot.scribeot.messagemodels.ClientDisconnectMessage;
 import com.scribeot.scribeot.messagemodels.InitDocumentStateRequestMessage;
 import com.scribeot.scribeot.messagemodels.InitDocumentStateResponseMessage;
+import com.scribeot.scribeot.messagemodels.NewClientJoinedMessage;
+import com.scribeot.scribeot.models.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -38,24 +41,29 @@ public class DocumentController {
                                       @DestinationVariable int documentId,
                                       Principal principal) throws InterruptedException {
         Thread.sleep(1000); // simulated delay
-        System.out.println(principal.getName() + " joined document " + documentId);
+        String clientId = principal.getName();
+        System.out.println(clientId + " joined document " + documentId);
 
         // 1. Establish user server-side
-        connectedClientService.addClient(documentId, principal.getName(), message.getClientNickname());
+        User newClient = new User(clientId, message.getClientNickname());
+        connectedClientService.addClient(documentId, newClient);
 
         // 2. Notify other clients of new user
-        // TODO: send message to all other clients
+        NewClientJoinedMessage newClientJoinedMessage = new NewClientJoinedMessage(clientId, newClient);
+        messagingTemplate.convertAndSend("/topic/" + documentId + "/new-client-joined", newClientJoinedMessage);
 
         // 3. Send new client the document state
         InitDocumentStateResponseMessage documentStateResponse = new InitDocumentStateResponseMessage();
         documentStateResponse.setDocument("This is a document.");
         documentStateResponse.setRevisionNo(1);
-        documentStateResponse.setMyUserId(principal.getName());
+        documentStateResponse.setMyUserId(clientId);
         documentStateResponse.setUsers(connectedClientService.getAllClients(documentId));
-        messagingTemplate.convertAndSendToUser(principal.getName(), "/queue/doc-init", documentStateResponse);
+        messagingTemplate.convertAndSendToUser(clientId, "/queue/doc-init", documentStateResponse);
     }
 
     public void onClientDisconnect(int documentId, String clientId) {
+        ClientDisconnectMessage clientDisconnectMessage = new ClientDisconnectMessage(clientId);
+        messagingTemplate.convertAndSend("/topic/" + documentId + "/client-disconnect", clientDisconnectMessage);
         System.out.println("Client " + clientId + " just disconnected from doc " + documentId);
     }
 }

@@ -1,15 +1,38 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {useParams} from 'react-router';
 import featherIcon from '../../assets/feather-icon.png';
 import loadingSpinner from '../../assets/loading-spinner.gif';
-import SocketHelper, {InitDocumentState} from '../../util/SocketHelper';
+import SocketHelper, {ClientDisconnect, InitDocumentState, NewClientJoined} from '../../util/SocketHelper';
+import User from '../../ot/User';
 
-const socketHelper: SocketHelper = new SocketHelper();
+const socketHelper: SocketHelper = new SocketHelper({disableDebug: true});
 
+/**
+ * Document is the high-level component for displaying and editing a document in ScribeOT.
+ * It triggers and reacts to WebSocket messages and holds all state for a document.
+ * It passes this state as props to lower-level components such as TextEditor and OtherUsers.
+ */
 const Document: React.FC = () => {
+    /** The nickname for a user is how the user is identified to other users */
     const [nickname, setNickname] = useState('');
+
+    /** The isLoggedIn flag denotes whether a user has selected a nickname yet */
     const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+    /** The document is loading when the user attempts to join with a nickname and is awaiting server response */
     const [loading, setLoading] = useState(false);
+
+    /** The document content is represented as a string */
+    const [documentContents, setDocumentContents] = useState('');
+
+    /** Revision number allows the server to consolidate operations received from clients in different states */
+    const [revisionNo, setRevisionNo] = useState(0);
+
+    /** The user id assigned by the server to this user */
+    const [myUserId, setMyUserId] = useState('');
+
+    /** The users list keeps track of the names and cursor positions of all other clients editing the document */
+    const [users, setUsers] = useState<{ [userId: string]: User }>({});
 
     const documentId = Number((useParams() as {docId: string}).docId);
     if(socketHelper.documentId === -1) {
@@ -19,22 +42,59 @@ const Document: React.FC = () => {
     const joinDocument = () => {
         setLoading(true);
         socketHelper.connect().then(() => {
-            configureWebsocketCallbacks();
+            // Once connected, ask server for the document state to initialize UI
             socketHelper.sendClientJoinRequest(nickname);
+
+            // Configure callback to handle the response
+            socketHelper.onDocumentInfoInitialized((initState: InitDocumentState) => {
+                console.log(initState);
+                setLoading(false);
+                setIsLoggedIn(true);
+
+                // initialize document state
+                setDocumentContents(initState.document);
+                setRevisionNo(initState.revisionNo);
+                setMyUserId(initState.myUserId);
+                setUsers(initState.users);
+            });
         });
     };
 
     /**
-     * This component needs to be able to react to messages received over WebSocket connection with the server.
-     * This method defines how Document should react to various server-side events.
+     * WebSocket callback: OnNewOtherClientJoined
+     * Updates the users list when a new client joins the document.
      */
-    const configureWebsocketCallbacks = () => {
-        socketHelper.onDocumentInfoInitialized((initState: InitDocumentState) => {
-            console.log(initState);
-            setLoading(false);
-            setIsLoggedIn(true);
-        });
-    };
+    useEffect(() => {
+        if(myUserId !== '') {
+            socketHelper.onNewOtherClientJoined((newClientJoined: NewClientJoined) => {
+                if(myUserId && myUserId !== newClientJoined.clientId) {
+                    // Add new client to users state object
+                    console.log(newClientJoined);
+                    const { clientId, client } = newClientJoined;
+                    setUsers({
+                        ...users,
+                        [clientId]: client
+                    });
+                }
+            });
+        }
+    }, [myUserId, users]);
+
+    /**
+     * WebSocket callback: OnClientLeft
+     * Updates the users list when a client leaves the document.
+     */
+    useEffect(() => {
+        if(Object.entries(users).length) {
+            socketHelper.onClientLeft((clientLeft: ClientDisconnect) => {
+                // Remove client from users state object
+                console.log(clientLeft);
+                const { clientId } = clientLeft;
+                const { [clientId]: _, ...withoutClient } = users;
+                setUsers(withoutClient);
+            });
+        }
+    }, [users]);
 
     const onNicknameInputKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if(e.key === 'Enter') {
