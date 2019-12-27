@@ -7,6 +7,7 @@ import User from '../../ot/User';
 import DocumentContent from '../document-content/DocumentContent';
 import UsersList from '../users-list/UsersList';
 import generateUserColor from '../../util/generateUserColor';
+import Selection from '../../ot/Selection';
 
 const socketHelper: SocketHelper = new SocketHelper({disableDebug: true});
 
@@ -61,6 +62,19 @@ const Document: React.FC = () => {
                 const usersWithColors = assignColorsToUsers(initState.users);
                 setUsers(usersWithColors);
             });
+        });
+    };
+
+    /**
+     * Updates user selection when it is changed (event propagated up from TextEditor component)
+     */
+    const onSelectionChanged = (newSelection: Selection) => {
+        setUsers({
+            ...users,
+            [myUserId]: {
+                ...users[myUserId],
+                selection: newSelection
+            }
         });
     };
 
@@ -120,7 +134,9 @@ const Document: React.FC = () => {
 
     const loggedInView = (
         <div className="logged-in">
-            <DocumentContent />
+            <DocumentContent
+                onSelectionChanged={onSelectionChanged}
+            />
             <UsersList users={users} myUserId={myUserId} />
         </div>
     );
